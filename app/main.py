@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from database import expenses
+from app.database import expenses
 
 app = Flask(__name__)
 
