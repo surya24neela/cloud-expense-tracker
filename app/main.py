@@ -1,16 +1,47 @@
 from flask import Flask, request, jsonify
-from app.database import expenses
+from app.database import get_connection, init_db
 
 app = Flask(__name__)
+
+@app.before_first_request
+def setup():
+    init_db()
 
 @app.route("/expenses", methods=["POST"])
 def add_expense():
     data = request.json
-    expenses.append(data)
+    title = data.get("title")
+    amount = data.get("amount")
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO expenses (title, amount) VALUES (%s, %s)",
+        (title, amount)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
     return jsonify({"message": "Expense added"}), 201
 
 @app.route("/expenses", methods=["GET"])
 def list_expenses():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, title, amount FROM expenses")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    expenses = []
+    for row in rows:
+        expenses.append({
+            "id": row[0],
+            "title": row[1],
+            "amount": row[2]
+        })
+
     return jsonify(expenses), 200
 
 @app.route("/health", methods=["GET"])
