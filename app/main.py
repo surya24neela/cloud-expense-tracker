@@ -3,10 +3,6 @@ from app.database import get_connection, init_db
 
 app = Flask(__name__)
 
-@app.before_first_request
-def setup():
-    init_db()
-
 @app.route("/expenses", methods=["POST"])
 def add_expense():
     data = request.json
@@ -15,6 +11,7 @@ def add_expense():
 
     conn = get_connection()
     cur = conn.cursor()
+    init_db()
     cur.execute(
         "INSERT INTO expenses (title, amount) VALUES (%s, %s)",
         (title, amount)
@@ -29,6 +26,7 @@ def add_expense():
 def list_expenses():
     conn = get_connection()
     cur = conn.cursor()
+    init_db()
     cur.execute("SELECT id, title, amount FROM expenses")
     rows = cur.fetchall()
     cur.close()
@@ -49,4 +47,5 @@ def health():
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=5000)
